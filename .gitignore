@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-ssr/
+.env.local
+.env.*.local
+.vite/
+*.log
+coverage/
+*.tsbuildinfo
+.tsbuildinfo*/
