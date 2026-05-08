@@ -44,5 +44,9 @@ export function deriveLabel(fhirBaseUrl: string): string {
 }
 
 export function redirectUri(): string {
-  return window.location.origin + '/oauth-callback';
+  // BASE_URL is '/' locally and '/<repo>/' on GitHub Pages. Strip the trailing
+  // slash so we don't get '<origin>//oauth-callback' — OpenEMR's redirect-URI
+  // matcher is a literal string compare and would reject the double slash.
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+  return window.location.origin + base + '/oauth-callback';
 }

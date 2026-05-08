@@ -41,7 +41,13 @@ const patientRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([indexRoute, callbackRoute, patientRoute]);
 
-export const router = createRouter({ routeTree });
+// import.meta.env.BASE_URL reflects Vite's `base` config — '/' for local dev,
+// '/<repo>/' for GitHub Pages builds. The router needs to know about this
+// prefix or it treats `/openEmrPwa/` as an unknown route and shows Not Found.
+export const router = createRouter({
+  routeTree,
+  basepath: import.meta.env.BASE_URL,
+});
 
 declare module '@tanstack/react-router' {
   interface Register {
