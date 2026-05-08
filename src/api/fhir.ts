@@ -70,8 +70,32 @@ async function searchBundle<T>(path: string): Promise<T[]> {
   return (bundle.entry ?? []).map((e) => e.resource);
 }
 
+// Roughly: 8-4-4-4-12 hex (RFC 4122). Used to decide whether a hand-typed
+// patient id needs to be resolved as an MRN/identifier first.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const fhir = {
-  patient: (id: string) => getResource<Patient>(`/Patient/${id}`),
+  /**
+   * Fetch one patient by id. If `id` looks like a UUID we hit /Patient/{id}
+   * directly; otherwise (e.g. a hand-typed MRN/pid) we fall back to
+   * /Patient?identifier={id} and return the first match. Lets the URL bar
+   * accept either form.
+   */
+  patient: async (id: string): Promise<Patient> => {
+    if (UUID_RE.test(id)) {
+      return getResource<Patient>(`/Patient/${id}`);
+    }
+    const matches = await searchBundle<Patient>(
+      `/Patient?identifier=${encodeURIComponent(id)}`,
+    );
+    if (matches.length === 0) {
+      throw new FhirError(
+        404,
+        `No patient found with id or identifier "${id}". Use the search picker or paste a UUID.`,
+      );
+    }
+    return matches[0];
+  },
 
   searchPatients: (query: string, count = 50) => {
     const params = new URLSearchParams({ _count: String(count) });
