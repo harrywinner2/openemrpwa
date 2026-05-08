@@ -14,7 +14,7 @@ export function MedicationsCard({ patientId }: { patientId: string }): JSX.Eleme
       {q.data && q.data.length > 0 && (
         <ul className="divide-y divide-slate-100">
           {q.data.map((m) => {
-            const f = format.medication(m);
+            const f = format.prescription(m);
             return (
               <li key={m.id} className="py-2">
                 <div className="font-medium">{f.name}</div>

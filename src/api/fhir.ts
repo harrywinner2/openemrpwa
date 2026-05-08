@@ -7,7 +7,6 @@ import type {
   Condition,
   Encounter,
   MedicationRequest,
-  MedicationStatement,
   Patient,
 } from './types';
 
@@ -88,8 +87,14 @@ export const fhir = {
       `/Condition?patient=${patientId}&category=problem-list-item&clinical-status=active`,
     ),
 
+  // Active meds — uses MedicationRequest because OpenEMR's FHIR doesn't expose
+  // MedicationStatement. status=active gets the current med list; we don't
+  // filter by intent so both order-based prescriptions and plan-style
+  // medication entries surface.
   medications: (patientId: string) =>
-    searchBundle<MedicationStatement>(`/MedicationStatement?patient=${patientId}&status=active`),
+    searchBundle<MedicationRequest>(
+      `/MedicationRequest?patient=${patientId}&status=active`,
+    ),
 
   prescriptions: (patientId: string) =>
     searchBundle<MedicationRequest>(

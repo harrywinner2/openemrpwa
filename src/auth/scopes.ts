@@ -2,12 +2,15 @@ export type AuthMode = 'clinician' | 'single-patient';
 
 const COMMON = ['openid', 'offline_access'];
 
+// Resources we request `.rs` (read+search) scopes for. Kept narrow because some
+// servers reject the entire registration if any scope in the bundle is unknown.
+// OpenEMR's FHIR exposes MedicationRequest but not MedicationStatement, so we
+// only ask for MedicationRequest and surface "Medications" from it.
 const RESOURCE_READ = [
   'Patient',
   'AllergyIntolerance',
   'Condition',
   'MedicationRequest',
-  'MedicationStatement',
   'CareTeam',
   'Encounter',
 ];
