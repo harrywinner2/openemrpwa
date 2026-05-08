@@ -38,6 +38,18 @@ export function scopesFor(mode: AuthMode): string {
   return [...COMMON, ...resourceScopes].join(' ');
 }
 
+/**
+ * Scopes to request at client-registration time. We register the union of both
+ * sign-in modes so the same client_id can be used for clinician (user/*) and
+ * single-patient (patient/*) sign-ins. The actual scopes granted are picked
+ * from this superset at the /authorize step based on the user's mode choice.
+ */
+export function scopesForRegistration(): string {
+  const userScopes = RESOURCE_READ.map((r) => `user/${r}.rs`);
+  const patientScopes = RESOURCE_READ.map((r) => `patient/${r}.rs`);
+  return [...COMMON, ...userScopes, ...patientScopes].join(' ');
+}
+
 export type AccessDescription = {
   headline: string;
   bullets: string[];

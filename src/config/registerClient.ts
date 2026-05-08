@@ -1,5 +1,5 @@
 import { redirectUri, type ServerConfig } from './serverConfig';
-import { scopesFor } from '../auth/scopes';
+import { scopesForRegistration } from '../auth/scopes';
 
 export type RegistrationResult =
   | { ok: true; clientId: string; needsAdminEnable: boolean }
@@ -26,21 +26,18 @@ export async function registerPublicClient(
     };
   }
 
-  // Note: we deliberately register with patient/* scopes, NOT user/*. OpenEMR's
-  // server-side policy refuses user/* scopes on public PKCE clients (those
-  // require a confidential client with a real client_secret, which a static
-  // SPA cannot safely hold). Clinician mode is then a UI-side restriction:
-  // the same client_id can be used at sign-in with patient/* scopes only.
-  // Also note: we omit `token_endpoint_auth_method` because OpenEMR's
-  // validator rejects "none" — omitting the field defaults to a public-client
-  // registration (client_secret returned as empty string).
+  // Register with the union of user/* and patient/* scopes. The /authorize
+  // step picks a subset based on the user's chosen mode. We omit
+  // `token_endpoint_auth_method` because OpenEMR's validator rejects "none";
+  // omitting the field defaults to a public-client registration (empty
+  // client_secret returned).
   const payload = {
     application_type: 'public',
     redirect_uris: [redirectUri()],
     post_logout_redirect_uris: [window.location.origin + '/'],
     client_name: appName,
     contacts: ['portal-admin@example.com'],
-    scope: scopesFor('single-patient'),
+    scope: scopesForRegistration(),
   };
 
   const failures: string[] = [];
