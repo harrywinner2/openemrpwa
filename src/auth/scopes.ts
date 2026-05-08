@@ -52,7 +52,10 @@ export function describeAccess(mode: AuthMode): AccessDescription {
         'Token inherits the signing-in user\'s OpenEMR permissions',
       ],
       warning:
-        'If your OpenEMR account is an admin, the app will inherit admin-level read access. SMART-on-FHIR has no "lesser" user scope — the token sees what you see. Only use clinician mode on a trusted device.',
+        'OpenEMR refuses user/* scopes on public (in-browser) clients — that combination requires a confidential client whose secret must live on a server. ' +
+        'On vanilla OpenEMR, expect "invalid_scope" at sign-in. ' +
+        'If sign-in works, the token still inherits admin-level read access if your account is an admin (SMART has no lesser-user scope). ' +
+        'Pick single-patient mode instead unless you know your server supports user/* on public clients.',
     };
   }
   return {
