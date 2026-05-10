@@ -11,6 +11,7 @@ import { MedicationsCard } from '../components/cards/MedicationsCard';
 import { PrescriptionsCard } from '../components/cards/PrescriptionsCard';
 import { CareTeamCard } from '../components/cards/CareTeamCard';
 import { EncountersCard } from '../components/cards/EncountersCard';
+import { CopilotPanel } from '../components/CopilotPanel';
 
 export function PatientDashboardPage(): JSX.Element {
   const { id } = useParams({ from: '/patient/$id' });
@@ -57,6 +58,9 @@ export function PatientDashboardPage(): JSX.Element {
           </div>
         </>
       )}
+      {/* W3: in-portal Co-Pilot panel. Self-gates via /capabilities.php
+          probe — renders nothing if the OpenEMR backend isn't configured. */}
+      <CopilotPanel />
     </div>
   );
 }
