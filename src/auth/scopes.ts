@@ -2,6 +2,13 @@ export type AuthMode = 'clinician' | 'single-patient';
 
 const COMMON = ['openid', 'offline_access'];
 
+// SMART standalone-launch context. When present in granted scopes, OpenEMR's
+// BearerTokenAuthorizationStrategy populates the request's patient UUID
+// binding from the access token's `patient` context claim. Without it,
+// every patient-scoped FHIR call dies at AuthorizationListener.php:146
+// with "Patient UUID is required for patient requests." → 401.
+const LAUNCH_PATIENT = 'launch/patient';
+
 // Resources we request `.rs` (read+search) scopes for. Kept narrow because some
 // servers reject the entire registration if any scope in the bundle is unknown.
 // OpenEMR's FHIR exposes MedicationRequest but not MedicationStatement, so we
@@ -35,7 +42,12 @@ const RESOURCE_READ = [
 export function scopesFor(mode: AuthMode): string {
   const prefix = mode === 'clinician' ? 'user' : 'patient';
   const resourceScopes = RESOURCE_READ.map((r) => `${prefix}/${r}.rs`);
-  return [...COMMON, ...resourceScopes].join(' ');
+  // Single-patient mode is a SMART standalone launch with patient context;
+  // OpenEMR requires `launch/patient` to bind the patient UUID into the
+  // bearer token's request scope. Clinician mode is cross-patient with no
+  // fixed launch context, so we omit it there.
+  const launchScopes = mode === 'single-patient' ? [LAUNCH_PATIENT] : [];
+  return [...COMMON, ...launchScopes, ...resourceScopes].join(' ');
 }
 
 /**
@@ -47,7 +59,10 @@ export function scopesFor(mode: AuthMode): string {
 export function scopesForRegistration(): string {
   const userScopes = RESOURCE_READ.map((r) => `user/${r}.rs`);
   const patientScopes = RESOURCE_READ.map((r) => `patient/${r}.rs`);
-  return [...COMMON, ...userScopes, ...patientScopes].join(' ');
+  // Register `launch/patient` so single-patient mode can request it at
+  // /authorize. Without it in the registration, OpenEMR drops the scope
+  // at consent time and the patient UUID never binds to the access token.
+  return [...COMMON, LAUNCH_PATIENT, ...userScopes, ...patientScopes].join(' ');
 }
 
 export type AccessDescription = {
